@@ -1,20 +1,22 @@
 import java.io.*;
 import java.util.*;
 
-public class FileProcessor {
+public class ProcesadorArchivos {
 
     // #################################
-    // ########### SESION 1 ############
+    // ########### SESIÓN 1 ############
     // #################################
+
     // Método para contar palabras en un archivo y actualizar el diccionario
-    public static void fichContPalabras(File fichEntrada, Map<String, Integer> diccionario) throws IOException {
-        BufferedReader br = new BufferedReader(new FileReader(fichEntrada));
+    public static void contarPalabrasEnArchivo(File archivoEntrada, Map<String, Integer> diccionario)
+            throws IOException {
+        BufferedReader br = new BufferedReader(new FileReader(archivoEntrada));
         String linea;
 
         while ((linea = br.readLine()) != null) {
             StringTokenizer st = new StringTokenizer(linea, " ,.:;(){}!°?\t''%/|[]<=>&#+*$-¨^~");
             while (st.hasMoreTokens()) {
-                String palabra = st.nextToken().toLowerCase(); // Normalizamos las palabras a minúsculas
+                String palabra = st.nextToken().toLowerCase(); // Normalizamos a minúsculas
                 diccionario.put(palabra, diccionario.getOrDefault(palabra, 0) + 1);
             }
         }
@@ -22,7 +24,7 @@ public class FileProcessor {
     }
 
     // Método para serializar el diccionario y guardarlo en un archivo
-    public static void salvarObjeto(Map<String, Integer> diccionario) {
+    public static void guardarObjeto(Map<String, Integer> diccionario) {
         try (FileOutputStream fos = new FileOutputStream("diccionario.ser");
                 ObjectOutputStream oos = new ObjectOutputStream(fos)) {
 
@@ -58,14 +60,14 @@ public class FileProcessor {
         return diccionario;
     }
 
-    // Método para imprimir el contenido del diccionario después de deserializarlo
+    // Método para imprimir el contenido del diccionario
     public static void imprimirDiccionario() {
         Map<String, Integer> diccionario = cargarObjeto();
 
         if (!diccionario.isEmpty()) {
             System.out.println("Contenido del diccionario:");
-            for (Map.Entry<String, Integer> entry : diccionario.entrySet()) {
-                System.out.println(entry.getKey() + " : " + entry.getValue());
+            for (Map.Entry<String, Integer> entrada : diccionario.entrySet()) {
+                System.out.println(entrada.getKey() + " : " + entrada.getValue());
             }
         } else {
             System.out.println("El diccionario está vacío.");
@@ -73,120 +75,116 @@ public class FileProcessor {
     }
 
     // Método para recorrer un directorio y contar palabras en cada archivo
-    public static void RIBW(File fichero, Map<String, Integer> diccionario) throws Exception {
+    public static void recorrerDirectorios(File directorio, Map<String, Integer> diccionario) throws Exception {
         Queue<File> frontera = new LinkedList<>();
-        frontera.offer(fichero);
+        frontera.offer(directorio);
 
         while (!frontera.isEmpty()) {
             File actual = frontera.poll();
 
             if (actual.isDirectory()) {
                 System.out.println("Estás en el directorio: " + actual);
-                String[] listaFicheros = actual.list();
+                String[] listaArchivos = actual.list();
 
-                if (listaFicheros != null) {
-                    for (String nombreFichero : listaFicheros) {
-                        File nuevoFichero = new File(actual, nombreFichero);
-                        if (nuevoFichero.isDirectory()) {
-                            frontera.offer(nuevoFichero);
+                if (listaArchivos != null) {
+                    for (String nombreArchivo : listaArchivos) {
+                        File nuevoArchivo = new File(actual, nombreArchivo);
+                        System.out.println(nombreArchivo);
+                        if (nuevoArchivo.isDirectory()) {
+                            frontera.offer(nuevoArchivo);
                         } else {
-                            fichContPalabras(nuevoFichero, diccionario);
+                            contarPalabrasEnArchivo(nuevoArchivo, diccionario);
                         }
                     }
                 }
             } else {
-                fichContPalabras(actual, diccionario);
+                contarPalabrasEnArchivo(actual, diccionario);
             }
         }
     }
 
     // #################################
-    // ########### SESION 2 ############
+    // ########### SESIÓN 2 ############
     // #################################
-    public static List<Ocurrencia> searchTokenInFiles(File root, String token) {
-        List<Ocurrencia> occurrences = new ArrayList<>();
-        Queue<File> queue = new LinkedList<>();
-        queue.offer(root);
 
-        while (!queue.isEmpty()) {
-            File current = queue.poll();
-            if (current.isDirectory()) {
-                // Add all files/subdirectories to the queue
-                File[] files = current.listFiles();
-                if (files != null) {
-                    for (File f : files) {
-                        queue.offer(f);
+    // Método para buscar un token en cada archivo a partir de un directorio raíz
+    public static List<Ocurrencia> buscarTokenEnArchivos(File raiz, String token) {
+        List<Ocurrencia> ocurrencias = new ArrayList<>();
+        Queue<File> cola = new LinkedList<>();
+        cola.offer(raiz);
+
+        while (!cola.isEmpty()) {
+            File actual = cola.poll();
+            if (actual.isDirectory()) {
+                File[] archivos = actual.listFiles();
+                if (archivos != null) {
+                    for (File archivo : archivos) {
+                        cola.offer(archivo);
                     }
                 }
             } else {
                 try {
-                    int count = countTokenInFile(current, token);
-                    // You may decide to only add files where the token appears
-                    if (count > 0) {
-                        occurrences.add(new Ocurrencia(current, count));
+                    int cuenta = contarTokenEnArchivo(actual, token);
+                    if (cuenta > 0) {
+                        ocurrencias.add(new Ocurrencia(actual, cuenta));
                     }
                 } catch (IOException e) {
-                    System.err.println("Error reading file: " + current.getAbsolutePath());
+                    System.err.println("Error al leer el archivo: " + actual);
                     e.printStackTrace();
                 }
             }
         }
-        return occurrences;
+        return ocurrencias;
     }
 
-    public static int countTokenInFile(File file, String token) throws IOException {
-        int count = 0;
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                // Tokenize the line with the same delimiters as before
-                StringTokenizer st = new StringTokenizer(line, " ,.:;(){}!°?\t''%/|[]<=>&#+*$-¨^~");
+    // Método para contar cuntas veces aparece un token en un archivo
+    public static int contarTokenEnArchivo(File archivo, String token) throws IOException {
+        int cuenta = 0;
+        try (BufferedReader br = new BufferedReader(new FileReader(archivo))) {
+            String linea;
+            while ((linea = br.readLine()) != null) {
+                StringTokenizer st = new StringTokenizer(linea, " ,.:;(){}!°?\t''%/|[]<=>&#+*$-¨^~");
                 while (st.hasMoreTokens()) {
-                    // Compare tokens in a case-insensitive way
                     if (st.nextToken().equalsIgnoreCase(token)) {
-                        count++;
+                        cuenta++;
                     }
                 }
             }
         }
-        return count;
+        return cuenta;
     }
 
     public static void main(String[] args) {
-        File fichero = new File("E1");
+        File directorioRaiz = new File("E1");
 
         Map<String, Integer> diccionario = cargarObjeto(); // Cargar diccionario
 
-        // SESION 1
+        // SESIÓN 1
         System.out.println("##### SESIÓN 1 #####");
-        if (fichero.exists())
-
-        {
+        if (directorioRaiz.exists()) {
             try {
-                RIBW(fichero, diccionario); // Procesar archivos y actualizar diccionario
+                recorrerDirectorios(directorioRaiz, diccionario); // Procesar archivos y actualizar diccionario
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            salvarObjeto(diccionario); // Guardar el diccionario actualizado
+            guardarObjeto(diccionario); // Guardar el diccionario actualizado
         }
 
         imprimirDiccionario(); // Mostrar el contenido final del diccionario
 
-        // SESSION 2: Search for a token in each file
+        // SESIÓN 2: Buscar un token en cada archivo
         Scanner sc = new Scanner(System.in);
-        System.out.println("Introduce a palabra (token) para buscar su frecuencia en cada archivo:");
-        String token = sc.nextLine().toLowerCase(); // Normalize token to lowercase
+        System.out.println("Introduce una palabra (token) para buscar su frecuencia en cada archivo:");
+        String token = sc.nextLine().toLowerCase(); // Normalizamos el token a minúsculas
 
-        // Assuming 'fichero' is your root directory
-        File rootDirectory = new File("E1");
-        List<Ocurrencia> Ocurrencias = searchTokenInFiles(rootDirectory, token);
+        List<Ocurrencia> ocurrencias = buscarTokenEnArchivos(directorioRaiz, token);
 
-        if (Ocurrencias.isEmpty()) {
+        if (ocurrencias.isEmpty()) {
             System.out.println("La palabra \"" + token + "\" no se encontró en ningún archivo.");
         } else {
             System.out.println("Frecuencia de \"" + token + "\" en cada archivo:");
-            for (Ocurrencia occ : Ocurrencias) {
-                System.out.println(occ);
+            for (Ocurrencia oc : ocurrencias) {
+                System.out.println(oc);
             }
         }
 

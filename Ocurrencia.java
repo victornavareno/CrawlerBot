@@ -1,30 +1,31 @@
 import java.io.File;
+import java.io.Serializable;
 
-public class Ocurrencia implements Comparable<Ocurrencia> {
-    private File file;
-    private int count;
+public class Ocurrencia implements Comparable<Ocurrencia>, Serializable {
+    private static final long serialVersionUID = 1L;
+    private File archivo;
+    private int cuenta;
 
-    public Ocurrencia(File file, int count) {
-        this.file = file;
-        this.count = count;
+    public Ocurrencia(File archivo, int cuenta) {
+        this.archivo = archivo;
+        this.cuenta = cuenta;
     }
 
-    public File getFile() {
-        return file;
+    public File getArchivo() {
+        return archivo;
     }
 
-    public int getCount() {
-        return count;
+    public int getCuenta() {
+        return cuenta;
     }
 
     @Override
     public String toString() {
-        return file.getAbsolutePath() + " : " + count;
+        return archivo.getAbsolutePath() + " : " + cuenta;
     }
 
-    // Optional: This can help if you want to sort your occurrences by file name.
     @Override
-    public int compareTo(Ocurrencia other) {
-        return this.file.getAbsolutePath().compareTo(other.file.getAbsolutePath());
+    public int compareTo(Ocurrencia otra) {
+        return this.archivo.getAbsolutePath().compareTo(otra.archivo.getAbsolutePath());
     }
 }
