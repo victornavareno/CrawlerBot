@@ -10,8 +10,15 @@ Este proyecto es un **web crawler desarrollado en Java**, diseñado para recorre
 - Almacenamiento y carga del índice en un archivo serializado.
 - Búsqueda optimizada de términos con soporte para múltiples archivos.
 
+---
+
+![image](https://github.com/user-attachments/assets/a40f1efd-1f91-41f1-9a97-c7ae290d830e)
+
+*Estructura de Ficheros en árbol a explorar*
 
 ### Modo de Uso
 - **Indexación de archivos:** Al ejecutarlo, el programa recorrerá los archivos en el directorio E1 y generará un diccionario con las frecuencias de las palabras.
 - **Búsqueda de palabras:** En la segunda fase, puedes introducir palabras clave y el sistema te mostrará su frecuencia en cada archivo.
 - **Salida del programa:** Para salir de la búsqueda, simplemente presiona ESC.
+
+### Autores: Víctor Navareño, Sergio Terrazas Lobato, Muhammad Zain Din
