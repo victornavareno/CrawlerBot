@@ -156,10 +156,10 @@ public class ProcesadorArchivos {
 
     public static void main(String[] args) {
         File directorioRaiz = new File("E1");
-
         Map<String, Integer> diccionario = cargarObjeto(); // Cargar diccionario
 
         // SESIÓN 1
+        System.out.println();
         System.out.println("##### SESIÓN 1 #####");
         if (directorioRaiz.exists()) {
             try {
@@ -172,19 +172,29 @@ public class ProcesadorArchivos {
 
         imprimirDiccionario(); // Mostrar el contenido final del diccionario
 
-        // SESIÓN 2: Buscar un token en cada archivo
+        // SESIÓN 2: Búsqueda interactiva de tokens
+        System.out.println();
+        System.out.println("##### SESIÓN 2 #####");
         Scanner sc = new Scanner(System.in);
-        System.out.println("Introduce una palabra (token) para buscar su frecuencia en cada archivo:");
-        String token = sc.nextLine().toLowerCase(); // Normalizamos el token a minúsculas
 
-        List<Ocurrencia> ocurrencias = buscarTokenEnArchivos(directorioRaiz, token);
+        while (true) {
+            System.out.println(
+                    "Introduce una palabra (token) para buscar su frecuencia en cada archivo (o escribe '/salir' para salir):");
+            String token = sc.nextLine().toLowerCase(); // Normalizamos el token a minúsculas
 
-        if (ocurrencias.isEmpty()) {
-            System.out.println("La palabra \"" + token + "\" no se encontró en ningún archivo.");
-        } else {
-            System.out.println("Frecuencia de \"" + token + "\" en cada archivo:");
-            for (Ocurrencia oc : ocurrencias) {
-                System.out.println(oc);
+            if (token.equals("/salir")) { // Si el usuario ingresa "ESC", terminamos el bucle
+                System.out.println("Saliendo del programa...");
+                break;
+            }
+
+            List<Ocurrencia> ocurrencias = buscarTokenEnArchivos(directorioRaiz, token);
+            if (ocurrencias.isEmpty()) {
+                System.out.println("La palabra \"" + token + "\" no se encontró en ningún archivo.");
+            } else {
+                System.out.println("Frecuencia de \"" + token + "\" en cada archivo:");
+                for (Ocurrencia oc : ocurrencias) {
+                    System.out.println(oc);
+                }
             }
         }
 
