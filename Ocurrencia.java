@@ -1,18 +1,14 @@
-import java.io.File;
-import java.io.Serializable;
-
-public class Ocurrencia implements Comparable<Ocurrencia>, Serializable {
-    private static final long serialVersionUID = 1L;
-    private File archivo;
+class Ocurrencia implements Comparable<Ocurrencia> {
+    private String rutaArchivo;
     private int cuenta;
 
-    public Ocurrencia(File archivo, int cuenta) {
-        this.archivo = archivo;
+    public Ocurrencia(String rutaArchivo, int cuenta) {
+        this.rutaArchivo = rutaArchivo;
         this.cuenta = cuenta;
     }
 
-    public File getArchivo() {
-        return archivo;
+    public String getRutaArchivo() {
+        return rutaArchivo;
     }
 
     public int getCuenta() {
@@ -21,11 +17,11 @@ public class Ocurrencia implements Comparable<Ocurrencia>, Serializable {
 
     @Override
     public String toString() {
-        return archivo.getAbsolutePath() + " : " + cuenta;
+        return rutaArchivo + " : " + cuenta;
     }
 
     @Override
     public int compareTo(Ocurrencia otra) {
-        return this.archivo.getAbsolutePath().compareTo(otra.archivo.getAbsolutePath());
+        return this.rutaArchivo.compareTo(otra.rutaArchivo);
     }
 }

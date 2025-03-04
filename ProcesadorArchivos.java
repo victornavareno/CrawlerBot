@@ -2,25 +2,26 @@ import java.io.*;
 import java.util.*;
 
 public class ProcesadorArchivos {
+    private static Map<String, Integer> diccionario = new TreeMap<>(); // variable global
 
     // #################################
     // ########### SESIÓN 1 ############
     // #################################
 
     // Método para contar palabras en un archivo y actualizar el diccionario
-    public static void contarPalabrasEnArchivo(File archivoEntrada, Map<String, Integer> diccionario)
+    public static void contarPalabrasEnArchivo(String rutaArchivo, Map<String, Integer> diccionario)
             throws IOException {
-        BufferedReader br = new BufferedReader(new FileReader(archivoEntrada));
-        String linea;
-
-        while ((linea = br.readLine()) != null) {
-            StringTokenizer st = new StringTokenizer(linea, " ,.:;(){}!°?\t''%/|[]<=>&#+*$-¨^~");
-            while (st.hasMoreTokens()) {
-                String palabra = st.nextToken().toLowerCase(); // Normalizamos a minúsculas
-                diccionario.put(palabra, diccionario.getOrDefault(palabra, 0) + 1);
+        File archivo = new File(rutaArchivo);
+        try (BufferedReader br = new BufferedReader(new FileReader(archivo))) {
+            String linea;
+            while ((linea = br.readLine()) != null) {
+                StringTokenizer st = new StringTokenizer(linea, " ,.:;(){}!°?\t''%/|[]<=>&#+*$-¨^~");
+                while (st.hasMoreTokens()) {
+                    String palabra = st.nextToken().toLowerCase();
+                    diccionario.put(palabra, diccionario.getOrDefault(palabra, 0) + 1);
+                }
             }
         }
-        br.close();
     }
 
     // Método para serializar el diccionario y guardarlo en un archivo
@@ -75,30 +76,30 @@ public class ProcesadorArchivos {
     }
 
     // Método para recorrer un directorio y contar palabras en cada archivo
-    public static void recorrerDirectorios(File directorio, Map<String, Integer> diccionario) throws Exception {
-        Queue<File> frontera = new LinkedList<>();
-        frontera.offer(directorio);
+    public static void recorrerDirectorios(String rutaDirectorio, Map<String, Integer> diccionario) throws Exception {
+        Queue<String> frontera = new LinkedList<>();
+        frontera.offer(rutaDirectorio);
 
         while (!frontera.isEmpty()) {
-            File actual = frontera.poll();
+            String rutaActual = frontera.poll();
+            File actual = new File(rutaActual);
 
             if (actual.isDirectory()) {
                 System.out.println("Estás en el directorio: " + actual);
                 String[] listaArchivos = actual.list();
-
                 if (listaArchivos != null) {
                     for (String nombreArchivo : listaArchivos) {
-                        File nuevoArchivo = new File(actual, nombreArchivo);
-                        System.out.println(nombreArchivo);
+                        String nuevaRuta = actual.getAbsolutePath() + File.separator + nombreArchivo;
+                        File nuevoArchivo = new File(nuevaRuta);
                         if (nuevoArchivo.isDirectory()) {
-                            frontera.offer(nuevoArchivo);
+                            frontera.offer(nuevaRuta);
                         } else {
-                            contarPalabrasEnArchivo(nuevoArchivo, diccionario);
+                            contarPalabrasEnArchivo(nuevaRuta, diccionario);
                         }
                     }
                 }
             } else {
-                contarPalabrasEnArchivo(actual, diccionario);
+                contarPalabrasEnArchivo(rutaActual, diccionario);
             }
         }
     }
@@ -108,28 +109,30 @@ public class ProcesadorArchivos {
     // #################################
 
     // Método para buscar un token en cada archivo a partir de un directorio raíz
-    public static List<Ocurrencia> buscarTokenEnArchivos(File raiz, String token) {
+    public static List<Ocurrencia> buscarTokenEnArchivos(String rutaRaiz, String token) {
         List<Ocurrencia> ocurrencias = new ArrayList<>();
-        Queue<File> cola = new LinkedList<>();
-        cola.offer(raiz);
+        Queue<String> cola = new LinkedList<>();
+        cola.offer(rutaRaiz);
 
         while (!cola.isEmpty()) {
-            File actual = cola.poll();
+            String rutaActual = cola.poll();
+            File actual = new File(rutaActual);
+
             if (actual.isDirectory()) {
                 File[] archivos = actual.listFiles();
                 if (archivos != null) {
                     for (File archivo : archivos) {
-                        cola.offer(archivo);
+                        cola.offer(archivo.getAbsolutePath());
                     }
                 }
             } else {
                 try {
-                    int cuenta = contarTokenEnArchivo(actual, token);
+                    int cuenta = contarTokenEnArchivo(rutaActual, token);
                     if (cuenta > 0) {
-                        ocurrencias.add(new Ocurrencia(actual, cuenta));
+                        ocurrencias.add(new Ocurrencia(rutaActual, cuenta));
                     }
                 } catch (IOException e) {
-                    System.err.println("Error al leer el archivo: " + actual);
+                    System.err.println("Error al leer el archivo: " + rutaActual);
                     e.printStackTrace();
                 }
             }
@@ -138,9 +141,9 @@ public class ProcesadorArchivos {
     }
 
     // Método para contar cuntas veces aparece un token en un archivo
-    public static int contarTokenEnArchivo(File archivo, String token) throws IOException {
+    public static int contarTokenEnArchivo(String rutaArchivo, String token) throws IOException {
         int cuenta = 0;
-        try (BufferedReader br = new BufferedReader(new FileReader(archivo))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(rutaArchivo))) {
             String linea;
             while ((linea = br.readLine()) != null) {
                 StringTokenizer st = new StringTokenizer(linea, " ,.:;(){}!°?\t''%/|[]<=>&#+*$-¨^~");
@@ -155,37 +158,29 @@ public class ProcesadorArchivos {
     }
 
     public static void main(String[] args) {
-        File directorioRaiz = new File("E1");
-        Map<String, Integer> diccionario = cargarObjeto(); // Cargar diccionario
+        String directorioRaiz = "E1";
+        File directorio = new File(directorioRaiz);
 
-        // SESIÓN 1
-        System.out.println();
-        System.out.println("##### SESIÓN 1 #####");
-        if (directorioRaiz.exists()) {
-            try {
-                recorrerDirectorios(directorioRaiz, diccionario); // Procesar archivos y actualizar diccionario
-            } catch (Exception e) {
-                e.printStackTrace();
+        // Si no hay argumentos -> Ejecuta SESIÓN 1 (Procesa archivos)
+        if (args.length == 0) {
+            System.out.println("No se han ingresado argumentos. Ejecutando SESIÓN 1.");
+            if (directorio.exists()) {
+                try {
+                    recorrerDirectorios(directorioRaiz, diccionario); // Procesar archivos y actualizar diccionario
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                guardarObjeto(diccionario); // Guardar el diccionario actualizado
             }
-            guardarObjeto(diccionario); // Guardar el diccionario actualizado
+
+            imprimirDiccionario(); // Mostrar el diccionario (deserializado)
         }
 
-        imprimirDiccionario(); // Mostrar el contenido final del diccionario
-
-        // SESIÓN 2: Búsqueda interactiva de tokens
-        System.out.println();
-        System.out.println("##### SESIÓN 2 #####");
-        Scanner sc = new Scanner(System.in);
-
-        while (true) {
-            System.out.println(
-                    "Introduce una palabra (token) para buscar su frecuencia en cada archivo (o escribe '/salir' para salir):");
-            String token = sc.nextLine().toLowerCase(); // Normalizamos el token a minúsculas
-
-            if (token.equals("/salir")) { // Si el usuario ingresa "ESC", terminamos el bucle
-                System.out.println("Saliendo del programa...");
-                break;
-            }
+        // Si hay 1 argumento -> Ejecuta SESIÓN 2 con búsqueda automática
+        else if (args.length == 1) {
+            String token = args[0].toLowerCase(); // Convertimos el argumento a minúsculas
+            System.out.println("\n##### SESIÓN 2 #####");
+            System.out.println("Buscando la palabra: \"" + token + "\" en los archivos...\n");
 
             List<Ocurrencia> ocurrencias = buscarTokenEnArchivos(directorioRaiz, token);
             if (ocurrencias.isEmpty()) {
@@ -198,6 +193,13 @@ public class ProcesadorArchivos {
             }
         }
 
-        sc.close();
+        // Si hay más de 1 argumento, muestra error
+        else {
+            System.out.println("Error: Se ha ingresado un número incorrecto de argumentos.");
+            System.out.println("Uso esperado:");
+            System.out.println("1. Sin argumentos -> Ejecuta la sesión 1.");
+            System.out.println("2. Con un argumento -> Busca la palabra en sesión 2.");
+        }
     }
+
 }
