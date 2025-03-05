@@ -158,27 +158,36 @@ public class ProcesadorArchivos {
     }
 
     public static void main(String[] args) {
-        String directorioRaiz = "E1";
+        if (args.length == 0) {
+            System.out.println("No se han ingresado argumentos.");
+            return;
+        }
+        String directorioRaiz = args[0];
         File directorio = new File(directorioRaiz);
 
-        // Si no hay argumentos -> Ejecuta SESIÓN 1 (Procesa archivos)
-        if (args.length == 0) {
-            System.out.println("No se han ingresado argumentos. Ejecutando SESIÓN 1.");
-            if (directorio.exists()) {
+        // EL DIRECTORIO INTRODUCIDO ES INCORRECTO
+        if (args.length == 1) {
+            if (!directorio.exists()) {
+                System.out.println("El directorio no existe.");
+                return;
+            }
+            // EJECUTO SESION 1
+            else if (directorio.exists()) {
+                System.out.println("Ejecutando SESIÓN 1.");
                 try {
                     recorrerDirectorios(directorioRaiz, diccionario); // Procesar archivos y actualizar diccionario
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
                 guardarObjeto(diccionario); // Guardar el diccionario actualizado
+                imprimirDiccionario(); // Mostrar el diccionario (deserializado)
             }
 
-            imprimirDiccionario(); // Mostrar el diccionario (deserializado)
         }
 
         // Si hay 1 argumento -> Ejecuta SESIÓN 2 con búsqueda automática
-        else if (args.length == 1) {
-            String token = args[0].toLowerCase(); // Convertimos el argumento a minúsculas
+        else if (args.length == 2) {
+            String token = args[1].toLowerCase(); // Convertimos el argumento a minúsculas
             System.out.println("\n##### SESIÓN 2 #####");
             System.out.println("Buscando la palabra: \"" + token + "\" en los archivos...\n");
 
