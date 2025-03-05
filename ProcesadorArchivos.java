@@ -187,6 +187,8 @@ public class ProcesadorArchivos {
                 System.out.println("La palabra \"" + token + "\" no se encontró en ningún archivo.");
             } else {
                 System.out.println("Frecuencia de \"" + token + "\" en cada archivo:");
+                ocurrencias.sort((o1, o2) -> Integer.compare(o2.getCuenta(), o1.getCuenta())); // Ordenar por frecuencia
+                                                                                               // descendente
                 for (Ocurrencia oc : ocurrencias) {
                     System.out.println(oc);
                 }
