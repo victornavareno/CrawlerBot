@@ -24,46 +24,9 @@ public class ProcesadorArchivos {
         }
     }
 
-    // Método para serializar el diccionario y guardarlo en un archivo
-    public static void guardarObjeto(Map<String, Integer> diccionario) {
-        try (FileOutputStream fos = new FileOutputStream("diccionario.ser");
-                ObjectOutputStream oos = new ObjectOutputStream(fos)) {
-
-            oos.writeObject(diccionario);
-            System.out.println("Diccionario guardado correctamente.");
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    // Método para deserializar el diccionario desde un archivo
-    public static Map<String, Integer> cargarObjeto() {
-        Map<String, Integer> diccionario = new TreeMap<>();
-
-        try (FileInputStream fis = new FileInputStream("diccionario.ser");
-                ObjectInputStream ois = new ObjectInputStream(fis)) {
-
-            Object obj = ois.readObject();
-            if (obj instanceof Map) {
-                diccionario = (Map<String, Integer>) obj;
-                System.out.println("Diccionario cargado correctamente.");
-            } else {
-                System.out.println("El objeto deserializado no es un Map.");
-            }
-
-        } catch (FileNotFoundException e) {
-            System.out.println("El archivo diccionario.ser no existe. Se creará uno nuevo.");
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        return diccionario;
-    }
-
     // Método para imprimir el contenido del diccionario
     public static void imprimirDiccionario() {
-        Map<String, Integer> diccionario = cargarObjeto();
+        Map<String, Integer> diccionario = CargarObjeto.cargarObjeto();
 
         if (!diccionario.isEmpty()) {
             System.out.println("Contenido del diccionario:");
@@ -162,6 +125,7 @@ public class ProcesadorArchivos {
             System.out.println("No se han ingresado argumentos.");
             return;
         }
+
         String directorioRaiz = args[0];
         File directorio = new File(directorioRaiz);
 
@@ -179,7 +143,7 @@ public class ProcesadorArchivos {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-                guardarObjeto(diccionario); // Guardar el diccionario actualizado
+                GuardarObjeto.guardarObjeto(diccionario);// Guardar el diccionario actualizado
                 imprimirDiccionario(); // Mostrar el diccionario (deserializado)
             }
 
