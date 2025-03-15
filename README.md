@@ -9,6 +9,7 @@ Este proyecto es un **web crawler desarrollado en Java**, diseñado para recorre
 - Procesamiento de texto para contar la frecuencia de palabras.
 - Almacenamiento y carga del índice en un archivo serializado.
 - Búsqueda optimizada de términos con soporte para múltiples archivos.
+- Implementación de un sistema de conocimiento usando un Thesauro.
 
 ---
 
