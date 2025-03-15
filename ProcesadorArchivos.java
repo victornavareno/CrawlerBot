@@ -2,7 +2,10 @@ import java.io.*;
 import java.util.*;
 
 public class ProcesadorArchivos {
-    private static Map<String, Integer> diccionario = new TreeMap<>(); // variable global
+
+    // Variables Globales
+    private static Map<String, Integer> diccionario = new TreeMap<>();
+    private static Map<String, Object> thesauro = new TreeMap<>();
 
     // #################################
     // ########### SESIÓN 1 ############
@@ -18,7 +21,9 @@ public class ProcesadorArchivos {
                 StringTokenizer st = new StringTokenizer(linea, " ,.:;(){}!°?\t''%/|[]<=>&#+*$-¨^~");
                 while (st.hasMoreTokens()) {
                     String palabra = st.nextToken().toLowerCase();
+                    // if (!palabra.contains("fig."))
                     diccionario.put(palabra, diccionario.getOrDefault(palabra, 0) + 1);
+
                 }
             }
         }
@@ -71,9 +76,8 @@ public class ProcesadorArchivos {
     // ########### SESIÓN 2 ############
     // #################################
 
-    // Método para buscar un token en cada archivo a partir de un directorio raíz
-    public static List<Ocurrencia> buscarTokenEnArchivos(String rutaRaiz, String token) {
-        List<Ocurrencia> ocurrencias = new ArrayList<>();
+    public static Map<String, Ocurrencia> buscarTokenEnArchivos(String rutaRaiz, String token) {
+        Map<String, Ocurrencia> ocurrencias = new HashMap<>();
         Queue<String> cola = new LinkedList<>();
         cola.offer(rutaRaiz);
 
@@ -92,7 +96,8 @@ public class ProcesadorArchivos {
                 try {
                     int cuenta = contarTokenEnArchivo(rutaActual, token);
                     if (cuenta > 0) {
-                        ocurrencias.add(new Ocurrencia(rutaActual, cuenta));
+                        ocurrencias.putIfAbsent(token, new Ocurrencia());
+                        ocurrencias.get(token).agregarOcurrencia(rutaActual, cuenta);
                     }
                 } catch (IOException e) {
                     System.err.println("Error al leer el archivo: " + rutaActual);
@@ -120,60 +125,76 @@ public class ProcesadorArchivos {
         return cuenta;
     }
 
+    public void Thesauro() {
+
+    }
+
+    public static void sesion1(String dirRaiz, File dir) {
+        if (!dir.exists()) {
+            System.out.println("El directorio no existe.");
+            return;
+        }
+        // EJECUTO SESION 1
+        else if (dir.exists()) {
+            System.out.println("Ejecutando SESIÓN 1.");
+            try {
+                recorrerDirectorios(dirRaiz, diccionario); // Procesar archivos y actualizar diccionario
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            GuardarObjeto.guardarObjeto(diccionario);// Guardar el diccionario actualizado
+            imprimirDiccionario(); // Mostrar el diccionario (deserializado)
+        }
+    }
+
+    public static void buscarFrecuenciaPalabras(String dirRaiz, File dir, String token) {
+        System.out.println("\n##### SESIÓN 2 #####");
+        System.out.println("Buscando la palabra: \"" + token + "\" en los archivos...\n");
+
+        Map<String, Ocurrencia> ocurrencias = buscarTokenEnArchivos(dirRaiz, token);
+
+        if (ocurrencias.isEmpty()) {
+            System.out.println("La palabra \"" + token + "\" no se encontró en ningún archivo.");
+        } else {
+            System.out.println("Frecuencia de \"" + token + "\" en cada archivo:");
+
+            // Crear una lista de rutas ordenadas por frecuencia descendente
+            List<Map.Entry<String, Integer>> listaArchivosOrdenados = new ArrayList<>(
+                    ocurrencias.get(token).getRutaArchivo().entrySet());
+            listaArchivosOrdenados.sort((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue()));
+
+            // Imprimir la lista ordenada solo con las rutas y frecuencias
+            for (Map.Entry<String, Integer> entry : listaArchivosOrdenados) {
+                String rutaRelativa = new File(dirRaiz).toURI().relativize(new File(entry.getKey()).toURI()).getPath();
+                // No muestra el path completo, solo el relativo
+                System.out.println(rutaRelativa + " = " + entry.getValue()); // Imprime la ruta relativa y frecuencia
+                                                                             // (Partiendo desde el directorio Madre)
+            }
+        }
+    }
+
     public static void main(String[] args) {
         if (args.length == 0) {
-            System.out.println("No se han ingresado argumentos.");
+            System.out.println("Error: No se han ingresado argumentos.");
+            System.out.println("Uso esperado:");
+            System.out.println("1. <directorio> -> Ejecuta la sesión 1.");
+            System.out.println("2. <directorio> <palabra> -> Busca la palabra en sesión 2.");
             return;
         }
 
         String directorioRaiz = args[0];
         File directorio = new File(directorioRaiz);
 
-        // EL DIRECTORIO INTRODUCIDO ES INCORRECTO
         if (args.length == 1) {
-            if (!directorio.exists()) {
-                System.out.println("El directorio no existe.");
-                return;
-            }
-            // EJECUTO SESION 1
-            else if (directorio.exists()) {
-                System.out.println("Ejecutando SESIÓN 1.");
-                try {
-                    recorrerDirectorios(directorioRaiz, diccionario); // Procesar archivos y actualizar diccionario
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                GuardarObjeto.guardarObjeto(diccionario);// Guardar el diccionario actualizado
-                imprimirDiccionario(); // Mostrar el diccionario (deserializado)
-            }
-
-        }
-
-        // Si hay 1 argumento -> Ejecuta SESIÓN 2 con búsqueda automática
-        else if (args.length == 2) {
-            String token = args[1].toLowerCase(); // Convertimos el argumento a minúsculas
-            System.out.println("\n##### SESIÓN 2 #####");
-            System.out.println("Buscando la palabra: \"" + token + "\" en los archivos...\n");
-
-            List<Ocurrencia> ocurrencias = buscarTokenEnArchivos(directorioRaiz, token);
-            if (ocurrencias.isEmpty()) {
-                System.out.println("La palabra \"" + token + "\" no se encontró en ningún archivo.");
-            } else {
-                System.out.println("Frecuencia de \"" + token + "\" en cada archivo:");
-                ocurrencias.sort((o1, o2) -> Integer.compare(o2.getCuenta(), o1.getCuenta())); // Ordenar por frecuencia
-                                                                                               // descendente
-                for (Ocurrencia oc : ocurrencias) {
-                    System.out.println(oc);
-                }
-            }
-        }
-
-        // Si hay más de 1 argumento, muestra error
-        else {
+            sesion1(directorioRaiz, directorio);
+        } else if (args.length == 2) {
+            String token = args[1].toLowerCase();
+            buscarFrecuenciaPalabras(directorioRaiz, directorio, token);
+        } else {
             System.out.println("Error: Se ha ingresado un número incorrecto de argumentos.");
             System.out.println("Uso esperado:");
-            System.out.println("1. Sin argumentos -> Ejecuta la sesión 1.");
-            System.out.println("2. Con un argumento -> Busca la palabra en sesión 2.");
+            System.out.println("1. <directorio> -> Ejecuta la sesión 1.");
+            System.out.println("2. <directorio> <palabra> -> Busca la palabra en sesión 2.");
         }
     }
 

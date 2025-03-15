@@ -1,27 +1,30 @@
-class Ocurrencia implements Comparable<Ocurrencia> {
-    private String rutaArchivo;
-    private int cuenta;
+import java.io.Serializable;
+import java.util.*;
 
-    public Ocurrencia(String rutaArchivo, int cuenta) {
-        this.rutaArchivo = rutaArchivo;
-        this.cuenta = cuenta;
+class Ocurrencia implements Serializable {
+    private Integer FT;
+    private Map<String, Integer> rutaArchivo;
+
+    public Ocurrencia() {
+        this.FT = 0;
+        this.rutaArchivo = new HashMap<>();
     }
 
-    public String getRutaArchivo() {
+    public void agregarOcurrencia(String ruta, int cantidad) {
+        this.FT += cantidad;
+        this.rutaArchivo.put(ruta, this.rutaArchivo.getOrDefault(ruta, 0) + cantidad);
+    }
+
+    public Integer getFT() {
+        return FT;
+    }
+
+    public Map<String, Integer> getRutaArchivo() {
         return rutaArchivo;
-    }
-
-    public int getCuenta() {
-        return cuenta;
     }
 
     @Override
     public String toString() {
-        return rutaArchivo + " : " + cuenta;
-    }
-
-    @Override
-    public int compareTo(Ocurrencia otra) {
-        return this.rutaArchivo.compareTo(otra.rutaArchivo);
+        return "Ocurrencia [FT=" + FT + ", rutaArchivo=" + rutaArchivo + "]";
     }
 }
