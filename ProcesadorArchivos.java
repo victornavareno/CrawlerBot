@@ -45,7 +45,7 @@ public class ProcesadorArchivos {
     public static void imprimirDiccionario() {
         // Se asume que CargarObjeto.cargarObjeto() ahora retorna Map<String,
         // Ocurrencia>
-        Map<String, Ocurrencia> diccionario = CargarObjeto.cargarObjeto();
+        Map<String, Ocurrencia> diccionario = CargarObjeto.cargarObjeto("diccionario.ser");
 
         if (!diccionario.isEmpty()) {
             System.out.println("Contenido del diccionario:");
@@ -140,10 +140,6 @@ public class ProcesadorArchivos {
         return cuenta;
     }
 
-    public void Thesauro() {
-        // Método a definir según las necesidades del thesauro
-    }
-
     public static void sesion1(String dirRaiz, File dir) {
         if (!dir.exists()) {
             System.out.println("El directorio no existe.");
@@ -155,7 +151,7 @@ public class ProcesadorArchivos {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            GuardarObjeto.guardarObjeto(diccionario); // Guardar el diccionario actualizado
+            GuardarObjeto.guardarObjeto("diccionario.ser", diccionario); // Guardar el diccionario actualizado
             imprimirDiccionario(); // Mostrar el diccionario (deserializado)
         }
     }
@@ -185,8 +181,10 @@ public class ProcesadorArchivos {
     }
 
     public static void main(String[] args) {
+
         if (args.length == 0) {
-            System.out.println("Error: No se han ingresado argumentos.");
+            System.out.println("No se han ingresado argumentos, imprimiendo diccionario...");
+            imprimirDiccionario();
             System.out.println("Uso esperado:");
             System.out.println("1. <directorio> -> Ejecuta la sesión 1.");
             System.out.println("2. <directorio> <palabra> -> Busca la palabra en sesión 2.");
@@ -195,6 +193,18 @@ public class ProcesadorArchivos {
 
         String directorioRaiz = args[0];
         File directorio = new File(directorioRaiz);
+        // Cargar cada estructura desde su archivo correspondiente:
+        thesauro = CargarObjeto.<Map<String, Object>>cargarObjeto("thesauro.ser");
+        diccionario = CargarObjeto.<Map<String, Ocurrencia>>cargarObjeto("diccionario.ser");
+
+        if (thesauro == null) {
+            // Inicializar el thesauro si no se pudo cargar
+            thesauro = new TreeMap<>();
+        }
+        if (diccionario == null) {
+            // Inicializar el diccionario si no se pudo cargar
+            diccionario = new TreeMap<>();
+        }
 
         if (args.length == 1) {
             sesion1(directorioRaiz, directorio);
@@ -208,4 +218,5 @@ public class ProcesadorArchivos {
             System.out.println("2. <directorio> <palabra> -> Busca la palabra en sesión 2.");
         }
     }
+
 }
