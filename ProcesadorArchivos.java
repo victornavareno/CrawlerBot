@@ -4,7 +4,7 @@ import java.util.*;
 public class ProcesadorArchivos {
 
     // Variables Globales
-    private static Map<String, Integer> diccionario = new TreeMap<>();
+    private static Map<String, Ocurrencia> diccionario = new TreeMap<>();
     private static Map<String, Object> thesauro = new TreeMap<>();
 
     // #################################
@@ -12,7 +12,7 @@ public class ProcesadorArchivos {
     // #################################
 
     // Método para contar palabras en un archivo y actualizar el diccionario
-    public static void contarPalabrasEnArchivo(String rutaArchivo, Map<String, Integer> diccionario)
+    public static void contarPalabrasEnArchivo(String rutaArchivo, Map<String, Ocurrencia> diccionario)
             throws IOException {
         File archivo = new File(rutaArchivo);
         try (BufferedReader br = new BufferedReader(new FileReader(archivo))) {
@@ -21,9 +21,21 @@ public class ProcesadorArchivos {
                 StringTokenizer st = new StringTokenizer(linea, " ,.:;(){}!°?\t''%/|[]<=>&#+*$-¨^~");
                 while (st.hasMoreTokens()) {
                     String palabra = st.nextToken().toLowerCase();
-                    // if (!palabra.contains("fig."))
-                    diccionario.put(palabra, diccionario.getOrDefault(palabra, 0) + 1);
-
+                    if (!palabra.contains("(loc.)") || !palabra.contains("(NoRAE)") || !palabra.contains("(fig.)")) {
+                        // comprobamos si está en el thesauro
+                        if (thesauro.containsKey(palabra)) {
+                            // Si la palabra está en el thesauro, se actualiza el diccionario con la
+                            // frecuencia de la palabra
+                            Ocurrencia oc;
+                            if (diccionario.containsKey(palabra)) {
+                                oc = diccionario.get(palabra);
+                            } else {
+                                oc = new Ocurrencia();
+                            }
+                            oc.agregarOcurrencia(rutaArchivo, 1);
+                            diccionario.put(palabra, oc);
+                        }
+                    }
                 }
             }
         }
@@ -31,11 +43,13 @@ public class ProcesadorArchivos {
 
     // Método para imprimir el contenido del diccionario
     public static void imprimirDiccionario() {
-        Map<String, Integer> diccionario = CargarObjeto.cargarObjeto();
+        // Se asume que CargarObjeto.cargarObjeto() ahora retorna Map<String,
+        // Ocurrencia>
+        Map<String, Ocurrencia> diccionario = CargarObjeto.cargarObjeto();
 
         if (!diccionario.isEmpty()) {
             System.out.println("Contenido del diccionario:");
-            for (Map.Entry<String, Integer> entrada : diccionario.entrySet()) {
+            for (Map.Entry<String, Ocurrencia> entrada : diccionario.entrySet()) {
                 System.out.println(entrada.getKey() + " : " + entrada.getValue());
             }
         } else {
@@ -44,7 +58,8 @@ public class ProcesadorArchivos {
     }
 
     // Método para recorrer un directorio y contar palabras en cada archivo
-    public static void recorrerDirectorios(String rutaDirectorio, Map<String, Integer> diccionario) throws Exception {
+    public static void recorrerDirectorios(String rutaDirectorio, Map<String, Ocurrencia> diccionario)
+            throws Exception {
         Queue<String> frontera = new LinkedList<>();
         frontera.offer(rutaDirectorio);
 
@@ -108,7 +123,7 @@ public class ProcesadorArchivos {
         return ocurrencias;
     }
 
-    // Método para contar cuntas veces aparece un token en un archivo
+    // Método para contar cuántas veces aparece un token en un archivo
     public static int contarTokenEnArchivo(String rutaArchivo, String token) throws IOException {
         int cuenta = 0;
         try (BufferedReader br = new BufferedReader(new FileReader(rutaArchivo))) {
@@ -126,23 +141,21 @@ public class ProcesadorArchivos {
     }
 
     public void Thesauro() {
-
+        // Método a definir según las necesidades del thesauro
     }
 
     public static void sesion1(String dirRaiz, File dir) {
         if (!dir.exists()) {
             System.out.println("El directorio no existe.");
             return;
-        }
-        // EJECUTO SESION 1
-        else if (dir.exists()) {
+        } else {
             System.out.println("Ejecutando SESIÓN 1.");
             try {
                 recorrerDirectorios(dirRaiz, diccionario); // Procesar archivos y actualizar diccionario
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            GuardarObjeto.guardarObjeto(diccionario);// Guardar el diccionario actualizado
+            GuardarObjeto.guardarObjeto(diccionario); // Guardar el diccionario actualizado
             imprimirDiccionario(); // Mostrar el diccionario (deserializado)
         }
     }
@@ -163,12 +176,10 @@ public class ProcesadorArchivos {
                     ocurrencias.get(token).getRutaArchivo().entrySet());
             listaArchivosOrdenados.sort((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue()));
 
-            // Imprimir la lista ordenada solo con las rutas y frecuencias
+            // Imprimir la lista ordenada solo con las rutas y frecuencias (ruta relativa)
             for (Map.Entry<String, Integer> entry : listaArchivosOrdenados) {
                 String rutaRelativa = new File(dirRaiz).toURI().relativize(new File(entry.getKey()).toURI()).getPath();
-                // No muestra el path completo, solo el relativo
-                System.out.println(rutaRelativa + " = " + entry.getValue()); // Imprime la ruta relativa y frecuencia
-                                                                             // (Partiendo desde el directorio Madre)
+                System.out.println(rutaRelativa + " = " + entry.getValue());
             }
         }
     }
@@ -197,5 +208,4 @@ public class ProcesadorArchivos {
             System.out.println("2. <directorio> <palabra> -> Busca la palabra en sesión 2.");
         }
     }
-
 }

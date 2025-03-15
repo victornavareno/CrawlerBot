@@ -5,15 +5,15 @@ import java.util.TreeMap;
 public class CargarObjeto {
 
     // Método para deserializar el diccionario desde un archivo
-    public static Map<String, Integer> cargarObjeto() {
-        Map<String, Integer> diccionario = new TreeMap<>();
+    public static Map<String, Ocurrencia> cargarObjeto() {
+        Map<String, Ocurrencia> diccionario = new TreeMap<>();
 
         try (FileInputStream fis = new FileInputStream("diccionario.ser");
                 ObjectInputStream ois = new ObjectInputStream(fis)) {
 
             Object obj = ois.readObject();
             if (obj instanceof Map) {
-                diccionario = (Map<String, Integer>) obj;
+                diccionario = (Map<String, Ocurrencia>) obj;
                 System.out.println("Diccionario cargado correctamente.");
             } else {
                 System.out.println("El objeto deserializado no es un Map.");
