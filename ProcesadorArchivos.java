@@ -132,7 +132,7 @@ public class ProcesadorArchivos {
     // ########### MAIN ############
 
     public static void main(String[] args) {
-        Map<String, Integer> diccionario = CargarObjeto.cargarObjeto(); // Cargamos el diccionario
+        Map<String, Integer> diccionario = CargarObjeto.cargarDiccionario(); // Cargamos el diccionario
 
         // Si no hay argumentos, mostramos error y uso.
         if (args.length == 0) {
