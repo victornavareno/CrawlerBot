@@ -6,11 +6,22 @@ public class CargarObjeto {
     // Método para deserializar el diccionario desde un archivo
     @SuppressWarnings("unchecked")
     public static Map<String, Integer> cargarDiccionario() {
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream("diccionario.ser"))) {
+        File archivo = new File("diccionario.ser");
+        if (!archivo.exists()) {
+            System.out.println("No se encontró el diccionario. Se creará uno nuevo.");
+            Map<String, Integer> diccionarioVacio = new HashMap<>();
+            GuardarObjeto.guardarObjeto(diccionarioVacio); // Se crea el archivo serializado.
+            return diccionarioVacio;
+        }
+
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(archivo))) {
             return (Map<String, Integer>) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            System.out.println("No se encontró el diccionario. Se creará uno nuevo.");
-            return new HashMap<>();
+            System.out.println("Error al cargar el diccionario. Se creará uno nuevo.");
+            e.printStackTrace();
+            Map<String, Integer> diccionarioVacio = new HashMap<>();
+            GuardarObjeto.guardarObjeto(diccionarioVacio);
+            return diccionarioVacio;
         }
     }
 

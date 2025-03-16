@@ -8,9 +8,9 @@ public class ProcesadorArchivos {
     // #################################
 
     // Método para contar palabras en un archivo y actualizar el diccionario
-    public static void contarPalabrasEnArchivo(String rutaArchivo, Map<String, Integer> diccionario)
+    public static void contarPalabrasEnArchivo(String rutaArchivo, Map<String, Integer> diccionario,
+            Set<String> thesauro)
             throws IOException {
-
         File archivo = new File(rutaArchivo);
         try (BufferedReader br = new BufferedReader(new FileReader(archivo))) {
             String linea;
@@ -18,7 +18,10 @@ public class ProcesadorArchivos {
                 StringTokenizer st = new StringTokenizer(linea, " ,.:;(){}!°?\t''%/|[]<=>&#+*$-¨^~");
                 while (st.hasMoreTokens()) {
                     String palabra = st.nextToken().toLowerCase();
-                    diccionario.put(palabra, diccionario.getOrDefault(palabra, 0) + 1);
+                    // Sólo indexar si la palabra está en el thesauro
+                    if (thesauro.contains(palabra)) {
+                        diccionario.put(palabra, diccionario.getOrDefault(palabra, 0) + 1);
+                    }
                 }
             }
         }
@@ -39,7 +42,8 @@ public class ProcesadorArchivos {
     }
 
     // Método para recorrer un directorio y contar palabras en cada archivo
-    public static void recorrerDirectorios(String rutaDirectorio, Map<String, Integer> diccionario) throws Exception {
+    public static void recorrerDirectorios(String rutaDirectorio, Map<String, Integer> diccionario,
+            Set<String> thesauro) throws Exception {
         Queue<String> frontera = new LinkedList<>();
         frontera.offer(rutaDirectorio);
 
@@ -57,12 +61,12 @@ public class ProcesadorArchivos {
                         if (nuevoArchivo.isDirectory()) {
                             frontera.offer(nuevaRuta);
                         } else {
-                            contarPalabrasEnArchivo(nuevaRuta, diccionario);
+                            contarPalabrasEnArchivo(nuevaRuta, diccionario, thesauro);
                         }
                     }
                 }
             } else {
-                contarPalabrasEnArchivo(rutaActual, diccionario);
+                contarPalabrasEnArchivo(rutaActual, diccionario, thesauro);
             }
         }
     }
@@ -72,11 +76,14 @@ public class ProcesadorArchivos {
     // #################################
 
     // Método para buscar un token en cada archivo a partir de un directorio raíz
-    public static Ocurrencia buscarTokenEnArchivos(String rutaRaiz, String token) {
-        // Creamos una Ocurrencia con FT=0 y un mapa vacío
-        Ocurrencia ocurrenciaGlobal = new Ocurrencia(0, new HashMap<>());
+    public static Ocurrencia buscarTokenEnArchivos(String rutaRaiz, String token, Set<String> thesauro) {
+        // Si el token no está en el thesauro, se devuelve una ocurrencia vacía
+        if (!thesauro.contains(token)) {
+            System.out.println("El token \"" + token + "\" no se encuentra en el thesauro.");
+            return new Ocurrencia(0, new HashMap<>());
+        }
 
-        // Cola para recorrer el árbol de directorios
+        Ocurrencia ocurrenciaGlobal = new Ocurrencia(0, new HashMap<>());
         Queue<String> cola = new LinkedList<>();
         cola.offer(rutaRaiz);
 
@@ -85,7 +92,6 @@ public class ProcesadorArchivos {
             File actual = new File(rutaActual);
 
             if (actual.isDirectory()) {
-                // Si es un directorio, añadimos todos sus ficheros e hijos a la cola
                 File[] archivos = actual.listFiles();
                 if (archivos != null) {
                     for (File archivo : archivos) {
@@ -93,13 +99,10 @@ public class ProcesadorArchivos {
                     }
                 }
             } else {
-                // Si es un archivo, contamos cuántas veces aparece 'token'
                 try {
-                    int cuenta = contarTokenEnArchivo(rutaActual, token);
+                    int cuenta = contarTokenEnArchivo(rutaActual, token, thesauro);
                     if (cuenta > 0) {
-                        // Guardamos la ruta y la frecuencia de la palabra en ese archivo
                         ocurrenciaGlobal.getRutaArchivo().put(rutaActual, cuenta);
-                        // Actualizamos el FT sumando la cuenta de este archivo
                         ocurrenciaGlobal.setFT(ocurrenciaGlobal.getFT() + cuenta);
                     }
                 } catch (IOException e) {
@@ -112,7 +115,11 @@ public class ProcesadorArchivos {
     }
 
     // Método para contar cuntas veces aparece un token en un archivo
-    public static int contarTokenEnArchivo(String rutaArchivo, String token) throws IOException {
+    public static int contarTokenEnArchivo(String rutaArchivo, String token, Set<String> thesauro) throws IOException {
+        // Si el token buscado no está en el thesauro, no se cuenta
+        if (!thesauro.contains(token))
+            return 0;
+
         int cuenta = 0;
         try (BufferedReader br = new BufferedReader(new FileReader(rutaArchivo))) {
             String linea;
@@ -132,11 +139,14 @@ public class ProcesadorArchivos {
     // ########### MAIN ############
 
     public static void main(String[] args) {
-        Map<String, Integer> diccionario = CargarObjeto.cargarDiccionario(); // Cargamos el diccionario
+        // Cargamos el diccionario y el thesauro
+        Map<String, Integer> diccionario = CargarObjeto.cargarDiccionario();
+        Set<String> thesauro = CargarObjeto.cargarThesauro();
 
         // Si no hay argumentos, mostramos error y uso.
         if (args.length == 0) {
             System.out.println("No se han ingresado argumentos.");
+            imprimirDiccionario(diccionario);
             System.out.println("Uso esperado:");
             System.out.println("1. <directorio> -> Ejecuta la sesión 1 (indexar).");
             System.out.println("2. <directorio> <token> -> Ejecuta la sesión 2 (buscar palabra).");
@@ -147,17 +157,15 @@ public class ProcesadorArchivos {
         File directorio = new File(directorioRaiz);
 
         // ============ SESIÓN 1 ============
-        // (Indexar si se pasa solo un argumento, que es el directorio)
         if (args.length == 1) {
             if (!directorio.exists()) {
                 System.out.println("El directorio no existe.");
                 return;
             }
-
             System.out.println("Ejecutando SESIÓN 1 (indexando directorio).");
 
             try {
-                recorrerDirectorios(directorioRaiz, diccionario);
+                recorrerDirectorios(directorioRaiz, diccionario, thesauro);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -168,12 +176,8 @@ public class ProcesadorArchivos {
             // Mostramos el contenido actualizado
             imprimirDiccionario(diccionario);
         }
-
         // ============ SESIÓN 2 ============
-        // (Buscar una palabra en todos los archivos, si hay 2 argumentos: directorio +
-        // token)
         else if (args.length == 2) {
-            // Comprobamos si el directorio existe
             if (!directorio.exists()) {
                 System.out.println("El directorio no existe.");
                 return;
@@ -182,8 +186,15 @@ public class ProcesadorArchivos {
             System.out.println("\n##### SESIÓN 2 #####");
             System.out.println("Buscando la palabra: \"" + token + "\" en los archivos...\n");
 
-            // Buscar el token en los archivos
-            Ocurrencia resultado = buscarTokenEnArchivos(directorioRaiz, token);
+            // Verificamos que el token esté en el thesauro
+            if (!thesauro.contains(token)) {
+                System.out.println(
+                        "El token \"" + token + "\" no se encuentra en el thesauro, por lo que no se indexará.");
+                return;
+            }
+
+            // Buscar el token en los archivos usando el thesauro
+            Ocurrencia resultado = buscarTokenEnArchivos(directorioRaiz, token, thesauro);
 
             if (resultado.getFT() == 0) {
                 System.out.println("La palabra \"" + token + "\" no se encontró en ningún archivo.");
@@ -191,11 +202,9 @@ public class ProcesadorArchivos {
                 System.out.println("Frecuencia total de \"" + token + "\": " + resultado.getFT());
                 System.out.println("Detalle por archivo:");
 
-                // Convertimos el mapa en una lista y lo ordenamos por frecuencia descendente
                 List<Map.Entry<String, Integer>> listaOrdenada = new ArrayList<>(resultado.getRutaArchivo().entrySet());
                 listaOrdenada.sort((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue())); // Orden descendente
 
-                // Imprimir la lista ordenada con rutas relativas
                 for (Map.Entry<String, Integer> entry : listaOrdenada) {
                     String rutaRelativa = new File(directorioRaiz).toURI()
                             .relativize(new File(entry.getKey()).toURI())
@@ -204,12 +213,11 @@ public class ProcesadorArchivos {
                 }
             }
         }
-
         // ============ ERROR DE USO ============
-        // (Más de 2 argumentos o negativo)
         else {
-            System.out.println("Error: Se ha ingresado un número incorrecto de argumentos.");
+            System.out.println("Error: Se ha ingresado un número icorrecto de argumentos.");
             System.out.println("Uso esperado:");
+            System.out.println("Ningún argumento: Imprime El Diccionario.");
             System.out.println("1. <directorio> -> Ejecuta la sesión 1 (indexar).");
             System.out.println("2. <directorio> <token> -> Ejecuta la sesión 2 (buscar palabra).");
         }
