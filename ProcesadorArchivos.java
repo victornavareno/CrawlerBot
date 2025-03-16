@@ -20,7 +20,11 @@ public class ProcesadorArchivos {
                     String palabra = st.nextToken().toLowerCase();
                     // Sólo indexar si la palabra está en el thesauro
                     if (thesauro.contains(palabra)) {
-                        diccionario.put(palabra, diccionario.getOrDefault(palabra, 0) + 1);
+                        if (!palabra.contains("(fig.)") || !palabra.contains("(NoRAE)")
+                                || !palabra.contains("(loc.)")) {
+                            diccionario.put(palabra, diccionario.getOrDefault(palabra, 0) + 1);
+                        }
+
                     }
                 }
             }
@@ -114,7 +118,7 @@ public class ProcesadorArchivos {
         return ocurrenciaGlobal;
     }
 
-    // Método para contar cuntas veces aparece un token en un archivo
+    // Método para contar cuntas veces apare un token en un archivo
     public static int contarTokenEnArchivo(String rutaArchivo, String token, Set<String> thesauro) throws IOException {
         // Si el token buscado no está en el thesauro, no se cuenta
         if (!thesauro.contains(token))
