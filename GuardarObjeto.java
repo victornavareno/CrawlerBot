@@ -6,13 +6,11 @@ import java.util.Map;
 public class GuardarObjeto {
     // Método para serializar el diccionario y guardarlo en un archivo
     public static void guardarObjeto(Map<String, Integer> diccionario) {
-        try (FileOutputStream fos = new FileOutputStream("diccionario.ser");
-                ObjectOutputStream oos = new ObjectOutputStream(fos)) {
-
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("diccionario.ser"))) {
             oos.writeObject(diccionario);
-            System.out.println("Diccionario guardado correctamente.");
-
+            System.out.println("Diccionario actualizado guardado correctamente.");
         } catch (IOException e) {
+            System.out.println("Error al guardar el diccionario.");
             e.printStackTrace();
         }
     }

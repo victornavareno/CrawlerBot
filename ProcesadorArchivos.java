@@ -2,7 +2,6 @@ import java.io.*;
 import java.util.*;
 
 public class ProcesadorArchivos {
-    private static Map<String, Integer> diccionario = new TreeMap<>(); // variable global
 
     // #################################
     // ########### SESIÓN 1 ############
@@ -11,6 +10,7 @@ public class ProcesadorArchivos {
     // Método para contar palabras en un archivo y actualizar el diccionario
     public static void contarPalabrasEnArchivo(String rutaArchivo, Map<String, Integer> diccionario)
             throws IOException {
+
         File archivo = new File(rutaArchivo);
         try (BufferedReader br = new BufferedReader(new FileReader(archivo))) {
             String linea;
@@ -24,9 +24,9 @@ public class ProcesadorArchivos {
         }
     }
 
-    // Método para imprimir el contenido del diccionario
-    public static void imprimirDiccionario() {
-        Map<String, Integer> diccionario = CargarObjeto.cargarObjeto();
+    // Método para imprimir el contenido del diccionario FUNCIONA 100%
+    public static void imprimirDiccionario(Map<String, Integer> diccionario) {
+        // Map<String, Integer> diccionario = CargarObjeto.cargarObjeto();
 
         if (!diccionario.isEmpty()) {
             System.out.println("Contenido del diccionario:");
@@ -132,9 +132,11 @@ public class ProcesadorArchivos {
     // ########### MAIN ############
 
     public static void main(String[] args) {
+        Map<String, Integer> diccionario = CargarObjeto.cargarObjeto(); // Cargamos el diccionario
+
         // Si no hay argumentos, mostramos error y uso.
         if (args.length == 0) {
-            System.out.println("Error: No se han ingresado argumentos.");
+            System.out.println("No se han ingresado argumentos.");
             System.out.println("Uso esperado:");
             System.out.println("1. <directorio> -> Ejecuta la sesión 1 (indexar).");
             System.out.println("2. <directorio> <token> -> Ejecuta la sesión 2 (buscar palabra).");
@@ -147,21 +149,24 @@ public class ProcesadorArchivos {
         // ============ SESIÓN 1 ============
         // (Indexar si se pasa solo un argumento, que es el directorio)
         if (args.length == 1) {
-            // Comprobamos si el directorio existe
             if (!directorio.exists()) {
                 System.out.println("El directorio no existe.");
                 return;
             }
-            // Si existe, indexamos los archivos
+
             System.out.println("Ejecutando SESIÓN 1 (indexando directorio).");
+
             try {
-                recorrerDirectorios(directorioRaiz, diccionario); // Procesa e indexa
+                recorrerDirectorios(directorioRaiz, diccionario);
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            // Guardamos y luego imprimimos el diccionario resultante
+
+            // Guardamos el diccionario actualizado
             GuardarObjeto.guardarObjeto(diccionario);
-            imprimirDiccionario();
+
+            // Mostramos el contenido actualizado
+            imprimirDiccionario(diccionario);
         }
 
         // ============ SESIÓN 2 ============
