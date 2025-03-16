@@ -1,20 +1,30 @@
 import java.io.*;
+import java.util.Map;
+import java.util.TreeMap;
 
 public class CargarObjeto {
-    public static <T> T cargarObjeto(String rutaArchivo) {
-        T objeto = null;
-        try (FileInputStream fis = new FileInputStream(rutaArchivo);
+
+    // Método para deserializar el diccionario desde un archivo
+    public static Map<String, Integer> cargarObjeto() {
+        Map<String, Integer> diccionario = new TreeMap<>();
+
+        try (FileInputStream fis = new FileInputStream("diccionario.ser");
                 ObjectInputStream ois = new ObjectInputStream(fis)) {
 
             Object obj = ois.readObject();
-            objeto = (T) obj;
+            if (obj instanceof Map) {
+                diccionario = (Map<String, Integer>) obj;
+                System.out.println("Diccionario cargado correctamente.");
+            } else {
+                System.out.println("El objeto deserializado no es un Map.");
+            }
 
-            System.out.println("Objeto cargado correctamente desde " + rutaArchivo);
         } catch (FileNotFoundException e) {
-            System.out.println("El archivo " + rutaArchivo + " no existe. Se creará uno nuevo.");
+            System.out.println("El archivo diccionario.ser no existe. Se creará uno nuevo.");
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-        return objeto;
+
+        return diccionario;
     }
 }
