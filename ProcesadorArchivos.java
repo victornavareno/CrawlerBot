@@ -106,7 +106,8 @@ public class ProcesadorArchivos {
                 try {
                     int cuenta = contarTokenEnArchivo(rutaActual, token, thesauro);
                     if (cuenta > 0) {
-                        ocurrenciaGlobal.getRutaArchivo().put(rutaActual, cuenta);
+                        int index = ListaURLs.obtenerIndiceURL(rutaActual);
+                        ocurrenciaGlobal.getIndiceArchivos().put(index, cuenta);
                         ocurrenciaGlobal.setFT(ocurrenciaGlobal.getFT() + cuenta);
                     }
                 } catch (IOException e) {
@@ -206,25 +207,22 @@ public class ProcesadorArchivos {
                 System.out.println("Frecuencia total de \"" + token + "\": " + resultado.getFT());
                 System.out.println("Detalle por archivo:");
 
-                List<Map.Entry<String, Integer>> listaOrdenada = new ArrayList<>(resultado.getRutaArchivo().entrySet());
+                // Convertimos el map de índices a una lista y lo ordenamos de forma descendente
+                List<Map.Entry<Integer, Integer>> listaOrdenada = new ArrayList<>(
+                        resultado.getIndiceArchivos().entrySet());
                 listaOrdenada.sort((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue())); // Orden descendente
 
-                for (Map.Entry<String, Integer> entry : listaOrdenada) {
+                // Se muestra la ruta original obtenida a partir del indice en ListaURLs
+                // asi nos ahorramos tener q guardar un string con la ruta y la busqueda es +
+                // eficiente
+                for (Map.Entry<Integer, Integer> entry : listaOrdenada) {
+                    String ruta = ListaURLs.getListaURLs().get(entry.getKey());
                     String rutaRelativa = new File(directorioRaiz).toURI()
-                            .relativize(new File(entry.getKey()).toURI())
+                            .relativize(new File(ruta).toURI())
                             .getPath();
                     System.out.println(" - " + rutaRelativa + " -> " + entry.getValue() + " apariciones.");
                 }
             }
         }
-        // ============ ERROR DE USO ============
-        else {
-            System.out.println("Error: Se ha ingresado un número icorrecto de argumentos.");
-            System.out.println("Uso esperado:");
-            System.out.println("Ningún argumento: Imprime El Diccionario.");
-            System.out.println("1. <directorio> -> Ejecuta la sesión 1 (indexar).");
-            System.out.println("2. <directorio> <token> -> Ejecuta la sesión 2 (buscar palabra).");
-        }
     }
-
 }

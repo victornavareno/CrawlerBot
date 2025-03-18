@@ -2,16 +2,12 @@ import java.io.Serializable;
 import java.util.Map;
 
 class Ocurrencia implements Serializable {
-    // FT = Frecuencia Total de la palabra en todos los archivos.
     private Integer FT;
+    private Map<Integer, Integer> indiceArchivos; // Ahora usamos índices en vez de rutas
 
-    // Mapa que asocia la ruta de un archivo con el número de apariciones en ese
-    // archivo.
-    private Map<String, Integer> rutaArchivo;
-
-    public Ocurrencia(Integer FT, Map<String, Integer> rutaArchivo) {
+    public Ocurrencia(Integer FT, Map<Integer, Integer> indiceArchivos) {
         this.FT = FT;
-        this.rutaArchivo = rutaArchivo;
+        this.indiceArchivos = indiceArchivos;
     }
 
     public Integer getFT() {
@@ -22,19 +18,19 @@ class Ocurrencia implements Serializable {
         this.FT = FT;
     }
 
-    public Map<String, Integer> getRutaArchivo() {
-        return rutaArchivo;
+    public Map<Integer, Integer> getIndiceArchivos() {
+        return indiceArchivos;
     }
 
-    public void setRutaArchivo(Map<String, Integer> rutaArchivo) {
-        this.rutaArchivo = rutaArchivo;
+    public void setIndiceArchivos(Map<Integer, Integer> indiceArchivos) {
+        this.indiceArchivos = indiceArchivos;
     }
 
     @Override
     public String toString() {
         return "Ocurrencia{" +
                 "FT=" + FT +
-                ", rutaArchivo=" + rutaArchivo +
+                ", indiceArchivos=" + indiceArchivos +
                 '}';
     }
 }
